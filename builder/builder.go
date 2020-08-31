@@ -2,33 +2,40 @@ package builder
 
 import (
 	"errors"
+	"fmt"
+	"reflect"
 	"strings"
 )
 
 type SQLBuilder struct {
-	_select      string
-	_insert      string
-	_update      string
-	_delete      string
-	_limit       string
-	_orderBy     string
-	_groupBy     string
-	_table       string
-	_join        string
-	_where       string
-	_having      string
-	_insertParams []interface{}
-	_updateParams []interface{}
-	_whereParams  []interface{}
-	_joinParams   []interface{}
-	_havingParams []interface{}
-	_limitParams  []interface{}
+	_select          string
+	_insert          string
+	_insertAll       string
+	_update          string
+	_delete          string
+	_limit           string
+	_orderBy         string
+	_groupBy         string
+	_table           string
+	_join            string
+	_where           string
+	_having          string
+	_insertParams    []interface{}
+	_insertAllParams []interface{}
+	_updateParams    []interface{}
+	_whereParams     []interface{}
+	_joinParams      []interface{}
+	_havingParams    []interface{}
+	_limitParams     []interface{}
 }
 
 var (
-	ErrTableEmpty = errors.New("table empty")
+	ErrTableEmpty      = errors.New("table empty")
 	ErrInsertStatement = errors.New("insert statement empty")
 	ErrUpdateStatement = errors.New("update statement empty")
+	ErrElementStatement = errors.New("element type error")
+	m                  reflect.Type
+	ignoreKey = "Id"
 )
 
 func NewSQLBuilder() *SQLBuilder {
@@ -38,7 +45,7 @@ func NewSQLBuilder() *SQLBuilder {
 //SELECT `t1`.`name`,`t1`.`age`,`t2`.`teacher`,`t3`.`address` FROM `test` as t1 LEFT
 //JOIN `test2` as `t2` ON `t1`.`class` = `t2`.`class` INNER JOIN `test3` as t3 ON
 //`t1`.`school` = `t3`.`school` WHERE `t1`.`age` >= 20 GROUP BY `t1`.`age`
-//HAVING COUNT(`t1`.`age`) > 2 ORDER BY `t1`.`age` DESC LIMIT 10 OFFSET 0
+//HAVING COUNT(`t1`.`age`) > 2 ORDER BY `t1`.`age` DESC LIMIT ?,?
 
 func (sb *SQLBuilder) GetQuerySql() (string, error) {
 	if sb._table == "" {
@@ -120,12 +127,12 @@ func (sb *SQLBuilder) Table(table string) *SQLBuilder {
 	return sb
 }
 
-func (sb *SQLBuilder)Insert(fields []string, values ...interface{}) *SQLBuilder{
+func (sb *SQLBuilder) Insert(fields []string, values ...interface{}) *SQLBuilder {
 	var buf strings.Builder
 
 	buf.WriteString("(")
 
-	for key,field := range fields {
+	for key, field := range fields {
 		buf.WriteString(field)
 		if key != len(fields)-1 {
 			buf.WriteString(",")
@@ -143,14 +150,14 @@ func (sb *SQLBuilder)Insert(fields []string, values ...interface{}) *SQLBuilder{
 	buf.WriteString(")")
 	sb._insert = buf.String()
 
-	for _,value := range values {
+	for _, value := range values {
 		sb._insertParams = append(sb._insertParams, value)
 	}
 
 	return sb
 }
 
-func (sb *SQLBuilder)GetInsertSql() (string, error)  {
+func (sb *SQLBuilder) GetInsertSql() (string, error) {
 	if sb._table == "" {
 		return "", ErrTableEmpty
 	}
@@ -165,41 +172,41 @@ func (sb *SQLBuilder)GetInsertSql() (string, error)  {
 	buf.WriteString(" ")
 	buf.WriteString(sb._insert)
 
-	return buf.String(),nil
+	return buf.String(), nil
 }
 
-func (sb *SQLBuilder)GetInsertParams() []interface{}  {
+func (sb *SQLBuilder) GetInsertParams() []interface{} {
 	return sb._insertParams
 }
 
-func (sb *SQLBuilder)Update(fields []string, values ...interface{})*SQLBuilder  {
-		var buf strings.Builder
+func (sb *SQLBuilder) Update(fields []string, values ...interface{}) *SQLBuilder {
+	var buf strings.Builder
 
-		for key,val := range fields {
-			buf.WriteString(val)
-			buf.WriteString(" = ")
-			buf.WriteString("?")
-			if key != len(fields)-1 {
-				buf.WriteString(",")
-			}
+	for key, val := range fields {
+		buf.WriteString(val)
+		buf.WriteString(" = ")
+		buf.WriteString("?")
+		if key != len(fields)-1 {
+			buf.WriteString(",")
 		}
+	}
 
-		sb._update = buf.String()
+	sb._update = buf.String()
 
-		for _,val := range values {
-			sb._updateParams = append(sb._updateParams, val)
-		}
+	for _, val := range values {
+		sb._updateParams = append(sb._updateParams, val)
+	}
 
-		return sb
+	return sb
 }
 
-func (sb *SQLBuilder)GetUpdateSql() (string, error)  {
+func (sb *SQLBuilder) GetUpdateSql() (string, error) {
 	if sb._table == "" {
-		return "",ErrTableEmpty
+		return "", ErrTableEmpty
 	}
 
 	if sb._update == "" {
-		return "",ErrUpdateStatement
+		return "", ErrUpdateStatement
 	}
 
 	var buf strings.Builder
@@ -213,19 +220,19 @@ func (sb *SQLBuilder)GetUpdateSql() (string, error)  {
 		buf.WriteString(sb._where)
 	}
 
-	return buf.String(),nil
+	return buf.String(), nil
 }
 
-func (sb *SQLBuilder)GetUpdateParams() []interface{}  {
+func (sb *SQLBuilder) GetUpdateParams() []interface{} {
 	Params := []interface{}{}
 	Params = append(Params, sb._updateParams...)
 	Params = append(Params, sb._whereParams...)
 	return Params
 }
 
-func (sb *SQLBuilder)GetDeleteSql() (string, error)  {
+func (sb *SQLBuilder) GetDeleteSql() (string, error) {
 	if sb._table == "" {
-		return "",ErrTableEmpty
+		return "", ErrTableEmpty
 	}
 
 	var buf strings.Builder
@@ -237,10 +244,10 @@ func (sb *SQLBuilder)GetDeleteSql() (string, error)  {
 		buf.WriteString(sb._where)
 	}
 
-	return buf.String(),nil
+	return buf.String(), nil
 }
 
-func (sb *SQLBuilder)GetDeleteParams() []interface{}  {
+func (sb *SQLBuilder) GetDeleteParams() []interface{} {
 	return sb._whereParams
 }
 
@@ -307,29 +314,29 @@ func (sb *SQLBuilder) whereRaw(operator string, s string, values []interface{}) 
 	return sb
 }
 
-func (sb *SQLBuilder)WhereIn(field string, value []interface{}) *SQLBuilder  {
+func (sb *SQLBuilder) WhereIn(field string, value []interface{}) *SQLBuilder {
 	return sb.whereIn("AND", "IN", field, value)
 }
 
-func (sb *SQLBuilder)WhereNotIn(field string, value []interface{}) *SQLBuilder  {
+func (sb *SQLBuilder) WhereNotIn(field string, value []interface{}) *SQLBuilder {
 	return sb.whereIn("AND", "NOT IN", field, value)
 }
 
-func (sb *SQLBuilder)WhereOrIn(field string, value []interface{}) *SQLBuilder  {
+func (sb *SQLBuilder) WhereOrIn(field string, value []interface{}) *SQLBuilder {
 	return sb.whereIn("OR", "IN", field, value)
 }
 
-func (sb *SQLBuilder)WhereOrNotIn(field string, value []interface{}) *SQLBuilder  {
+func (sb *SQLBuilder) WhereOrNotIn(field string, value []interface{}) *SQLBuilder {
 	return sb.whereIn("OR", "NOT IN", field, value)
 }
 
-func (sb *SQLBuilder)whereIn(operator string, condition string, field string, values []interface{}) *SQLBuilder  {
+func (sb *SQLBuilder) whereIn(operator string, condition string, field string, values []interface{}) *SQLBuilder {
 	var buf strings.Builder
 	buf.WriteString(sb._where)
 
 	if buf.Len() == 0 {
 		buf.WriteString("WHERE ")
-	}else{
+	} else {
 		buf.WriteString(" ")
 		buf.WriteString(operator)
 		buf.WriteString(" ")
@@ -340,7 +347,7 @@ func (sb *SQLBuilder)whereIn(operator string, condition string, field string, va
 	buf.WriteString(condition)
 	buf.WriteString(" ")
 	buf.WriteString("(")
-	for i:=0; i<len(values);i++  {
+	for i := 0; i < len(values); i++ {
 		buf.WriteString("?")
 		if i != len(values)-1 {
 			buf.WriteString(",")
@@ -350,25 +357,25 @@ func (sb *SQLBuilder)whereIn(operator string, condition string, field string, va
 
 	sb._where = buf.String()
 
-	for _,val := range values {
+	for _, val := range values {
 		sb._whereParams = append(sb._whereParams, val)
 	}
 
 	return sb
 }
 
-func (sb *SQLBuilder)Limit(offset, num interface{}) *SQLBuilder  {
+func (sb *SQLBuilder) Limit(offset, num interface{}) *SQLBuilder {
 	var buf strings.Builder
-	buf.WriteString("LIMIT ? OFFSET ?")
+	buf.WriteString("LIMIT ?,?")
 	sb._limit = buf.String()
 	sb._limitParams = append(sb._limitParams, offset, num)
 	return sb
 }
 
-func (sb *SQLBuilder)OrderBy(order string, fields ...string) *SQLBuilder  {
+func (sb *SQLBuilder) OrderBy(order string, fields ...string) *SQLBuilder {
 	var buf strings.Builder
 	buf.WriteString("ORDER BY ")
-	for key,val := range fields{
+	for key, val := range fields {
 		buf.WriteString(val)
 		if key != len(fields)-1 {
 			buf.WriteString(",")
@@ -383,7 +390,7 @@ func (sb *SQLBuilder)OrderBy(order string, fields ...string) *SQLBuilder  {
 	return sb
 }
 
-func (sb *SQLBuilder)GroupBy(field string) *SQLBuilder  {
+func (sb *SQLBuilder) GroupBy(field string) *SQLBuilder {
 	var buf strings.Builder
 	buf.WriteString("GROUP BY ")
 	buf.WriteString(field)
@@ -392,7 +399,7 @@ func (sb *SQLBuilder)GroupBy(field string) *SQLBuilder  {
 	return sb
 }
 
-func (sb *SQLBuilder)JoinRaw(s string, values ...interface{}) *SQLBuilder  {
+func (sb *SQLBuilder) JoinRaw(s string, values ...interface{}) *SQLBuilder {
 	var buf strings.Builder
 	buf.WriteString(sb._join)
 
@@ -409,21 +416,21 @@ func (sb *SQLBuilder)JoinRaw(s string, values ...interface{}) *SQLBuilder  {
 	return sb
 }
 
-func (sb *SQLBuilder)HavingRaw(s string, values ...interface{}) *SQLBuilder  {
+func (sb *SQLBuilder) HavingRaw(s string, values ...interface{}) *SQLBuilder {
 	return sb.havingRaw("AND", s, values)
 }
 
-func (sb *SQLBuilder)HavingRawOr(s string, values ...interface{}) *SQLBuilder  {
+func (sb *SQLBuilder) HavingRawOr(s string, values ...interface{}) *SQLBuilder {
 	return sb.havingRaw("OR", s, values)
 }
 
-func (sb *SQLBuilder)havingRaw(operator string ,s string, values ...interface{}) *SQLBuilder  {
+func (sb *SQLBuilder) havingRaw(operator string, s string, values ...interface{}) *SQLBuilder {
 	var buf strings.Builder
 	buf.WriteString(sb._having)
 
-	if buf.Len() == 0{
+	if buf.Len() == 0 {
 		buf.WriteString("HAVING ")
-	}else {
+	} else {
 		buf.WriteString(" ")
 		buf.WriteString(operator)
 		buf.WriteString(" ")
@@ -438,15 +445,15 @@ func (sb *SQLBuilder)havingRaw(operator string ,s string, values ...interface{})
 	return sb
 }
 
-func (sb *SQLBuilder)Having(field string, condition string, value interface{}) *SQLBuilder  {
+func (sb *SQLBuilder) Having(field string, condition string, value interface{}) *SQLBuilder {
 	return sb.having("AND", field, condition, value)
 }
 
-func (sb *SQLBuilder)HavingOr(field string, condition string, value interface{}) *SQLBuilder  {
+func (sb *SQLBuilder) HavingOr(field string, condition string, value interface{}) *SQLBuilder {
 	return sb.having("OR", field, condition, value)
 }
 
-func (sb *SQLBuilder)having(operator string ,field string, condition string, value interface{}) *SQLBuilder  {
+func (sb *SQLBuilder) having(operator string, field string, condition string, value interface{}) *SQLBuilder {
 	if sb._groupBy == "" {
 		return sb
 	}
@@ -456,20 +463,175 @@ func (sb *SQLBuilder)having(operator string ,field string, condition string, val
 
 	if buf.Len() == 0 {
 		buf.WriteString("HAVING ")
-	}else {
+	} else {
 		buf.WriteString(" ")
 		buf.WriteString(operator)
 		buf.WriteString(" ")
 	}
-	
+
 	buf.WriteString(field)
 	buf.WriteString(" ")
 	buf.WriteString(condition)
 	buf.WriteString(" ")
 	buf.WriteString("?")
-	
+
 	sb._having = buf.String()
 
 	sb._havingParams = append(sb._havingParams, value)
 	return sb
+}
+
+func (sb *SQLBuilder) InsertAll(fields []string, values ...[]interface{}) *SQLBuilder {
+	var buf strings.Builder
+
+	buf.WriteString("(")
+
+	for key, field := range fields {
+		buf.WriteString(field)
+		if key != len(fields)-1 {
+			buf.WriteString(",")
+		}
+	}
+	buf.WriteString(") VALUES ")
+
+	for key := range values {
+		buf.WriteString("(")
+		for key := range fields {
+			buf.WriteString("?")
+			if key != len(fields)-1 {
+				buf.WriteString(",")
+			}
+		}
+		buf.WriteString(")")
+		if key != len(values)-1 {
+			buf.WriteString(",")
+		}
+	}
+
+	sb._insertAll = buf.String()
+
+	for _, value := range values {
+		sb._insertAllParams = append(sb._insertAllParams, value...)
+	}
+
+	return sb
+}
+
+func (sb *SQLBuilder) GetInsertAllSql() (string, error) {
+	if sb._table == "" {
+		return "", ErrTableEmpty
+	}
+
+	if sb._insertAll == "" {
+		return "", ErrInsertStatement
+	}
+
+	var buf strings.Builder
+	buf.WriteString("INSERT INTO ")
+	buf.WriteString(sb._table)
+	buf.WriteString(" ")
+	buf.WriteString(sb._insertAll)
+
+	return buf.String(), nil
+}
+
+func (sb *SQLBuilder) GetInsertAllParams() []interface{} {
+	return sb._insertAllParams
+}
+
+//传数组或者切片,默认忽略Id字段，
+//结构体字段添加标签`gdb:"ignore"`可以忽略该字段，
+//添加`gdb:"require"`可以不忽略该字段
+func (sb *SQLBuilder) InsertAllModel(models interface{}) (string,error) {
+	fields,values,err := sb.reflectElementInfo(models)
+	if err != nil {
+		return "",nil
+	}
+
+	return sb.InsertAll(fields,values...).GetInsertAllSql()
+}
+
+func (sb *SQLBuilder) reflectElementInfo(elem interface{}) ([]string,[][]interface{},error) {
+	m = reflect.TypeOf(elem)
+	values := make([]interface{}, 0)
+	allValues := make([][]interface{}, 0)
+	v := reflect.ValueOf(elem)
+	switch m.Kind() {
+	case reflect.Slice, reflect.Array:
+		//fmt.Println(values)
+		m = reflect.TypeOf(elem).Elem() //获取slice或array内的元素类型
+		if m.Kind() == reflect.Ptr {
+			//如果是指针，则指向其所指的元素
+			m = m.Elem()
+		}
+
+		for i := 0; i < v.Len(); i++ {
+			e := v.Index(i).Elem()
+			for i := 0; i < m.NumField(); i++ {
+				fn := m.Field(i).Name
+				tag := m.Field(i).Tag.Get("gdb")
+				if isContinue(fn, tag) {
+					continue
+				}
+				values = append(values, e.FieldByName(fn).Interface())
+			}
+			allValues = append(allValues, values)
+			values = values[0:0]
+		}
+		break
+	case reflect.Ptr:
+		//如果是指针，则指向其所指的对象
+		m = reflect.TypeOf(elem).Elem()
+		values = getParams(v.Elem(), m)
+		allValues = append(allValues, values)
+		break
+	case reflect.Struct:
+		values = getParams(v, m)
+		allValues = append(allValues, values)
+		break
+	default:
+		return nil,nil,ErrElementStatement
+	}
+
+	fields := make([]string, 0)
+	for i := 0; i < m.NumField(); i++ {
+		fn := m.Field(i).Name
+		tag := m.Field(i).Tag.Get("gdb")
+		if isContinue(fn, tag) {
+			continue
+		}
+		fields = append(fields, fmt.Sprintf("%s", fn))
+	}
+
+	return fields,allValues,nil
+}
+
+func getParams(v reflect.Value, m reflect.Type) []interface{} {
+	values := make([]interface{}, 0)
+	for i := 0; i < m.NumField(); i++ {
+		fn := m.Field(i).Name
+		if fn == "Id" {
+			continue
+		}
+		values = append(values, v.FieldByName(fn).Interface())
+	}
+
+	return values
+}
+
+//是否跳过
+func isContinue(fn, tag string) bool {
+	if strings.Contains(tag, "ignore") {
+		return true
+	}
+
+	if strings.Contains(tag, "require") {
+		return false
+	}
+	//fmt.Println("tag",tag,"unignore", strings.Contains(tag, "unignore"))
+	if strings.Contains(ignoreKey, fn){
+		return true
+	}
+
+	return false
 }
