@@ -20,9 +20,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b43f6019-9018-4d97-8f80-f7f393c74dff" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/builder/builder_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/builder/builder.go" beforeDir="false" afterPath="$PROJECT_DIR$/builder/builder.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/builder/builder_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/builder/builder_test.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -60,7 +60,7 @@
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
   </component>
   <component name="RunManager" selected="Go Test.TestSQLBuilder_InsertAllModel in gdb/builder">
-    <configuration name="TestSQLBuilder_GetDeleteSql in gdb/builder" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+    <configuration name="Test1 in gdb/builder" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="gdb" />
       <working_directory value="$PROJECT_DIR$/builder" />
       <framework value="gotest" />
@@ -68,7 +68,7 @@
       <package value="gdb/builder" />
       <directory value="$PROJECT_DIR$" />
       <filePath value="$PROJECT_DIR$" />
-      <pattern value="^TestSQLBuilder_GetDeleteSql$" />
+      <pattern value="^Test1$" />
       <method v="2" />
     </configuration>
     <configuration name="TestSQLBuilder_GetQuerySql2 in gdb/builder" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
@@ -118,10 +118,10 @@
     <recent_temporary>
       <list>
         <item itemvalue="Go Test.TestSQLBuilder_InsertAllModel in gdb/builder" />
+        <item itemvalue="Go Test.Test1 in gdb/builder" />
         <item itemvalue="Go Test.TestSQLBuilder_GetQuerySql2 in gdb/builder" />
         <item itemvalue="Go Test.TestSQLBuilder_Insert in gdb/builder" />
         <item itemvalue="Go Test.TestSQLBuilder_GetUpdateSql in gdb/builder" />
-        <item itemvalue="Go Test.TestSQLBuilder_GetDeleteSql in gdb/builder" />
       </list>
     </recent_temporary>
   </component>
@@ -145,21 +145,21 @@
     <integration-enabled>true</integration-enabled>
   </component>
   <component name="WindowStateProjectService">
-    <state width="1884" height="398" key="GridCell.Tab.0.bottom" timestamp="1598695546587">
+    <state width="1884" height="439" key="GridCell.Tab.0.bottom" timestamp="1598939156871">
       <screen x="0" y="23" width="2560" height="977" />
     </state>
-    <state width="1884" height="398" key="GridCell.Tab.0.bottom/0.23.2560.977@0.23.2560.977" timestamp="1598695546587" />
-    <state width="1884" height="398" key="GridCell.Tab.0.center" timestamp="1598695546586">
+    <state width="1884" height="439" key="GridCell.Tab.0.bottom/0.23.2560.977@0.23.2560.977" timestamp="1598939156871" />
+    <state width="1884" height="439" key="GridCell.Tab.0.center" timestamp="1598939156870">
       <screen x="0" y="23" width="2560" height="977" />
     </state>
-    <state width="1884" height="398" key="GridCell.Tab.0.center/0.23.2560.977@0.23.2560.977" timestamp="1598695546586" />
-    <state width="1884" height="398" key="GridCell.Tab.0.left" timestamp="1598695546586">
+    <state width="1884" height="439" key="GridCell.Tab.0.center/0.23.2560.977@0.23.2560.977" timestamp="1598939156870" />
+    <state width="1884" height="439" key="GridCell.Tab.0.left" timestamp="1598939156870">
       <screen x="0" y="23" width="2560" height="977" />
     </state>
-    <state width="1884" height="398" key="GridCell.Tab.0.left/0.23.2560.977@0.23.2560.977" timestamp="1598695546586" />
-    <state width="1884" height="398" key="GridCell.Tab.0.right" timestamp="1598695546586">
+    <state width="1884" height="439" key="GridCell.Tab.0.left/0.23.2560.977@0.23.2560.977" timestamp="1598939156870" />
+    <state width="1884" height="439" key="GridCell.Tab.0.right" timestamp="1598939156870">
       <screen x="0" y="23" width="2560" height="977" />
     </state>
-    <state width="1884" height="398" key="GridCell.Tab.0.right/0.23.2560.977@0.23.2560.977" timestamp="1598695546586" />
+    <state width="1884" height="439" key="GridCell.Tab.0.right/0.23.2560.977@0.23.2560.977" timestamp="1598939156870" />
   </component>
 </project>

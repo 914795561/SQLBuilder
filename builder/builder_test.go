@@ -12,9 +12,9 @@ import (
 var db *sql2.DB
 
 type Test struct {
-	Id   int64
-	Name string
-	Age  int
+	Id   int64 `gdb:"column:id;require"`
+	Name string `gdb:"column:user_name"`
+	Age  int `gdb:"column:userAge;underline"`
 }
 
 func init() {
@@ -188,7 +188,7 @@ func TestSQLBuilder_InsertAllModel(t *testing.T) {
 		Name: "t3",
 		Age:  21,
 	}
-	ts := []*Test{&t1,&t2,&t3}
+	ts := []Test{t1,t2,t3}
 	sb := builder.NewSQLBuilder()
 	sql,err := sb.Table("test").InsertAllModel(ts)
 	if err != nil {

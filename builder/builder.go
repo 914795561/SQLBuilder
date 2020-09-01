@@ -1,10 +1,12 @@
 package builder
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"reflect"
 	"strings"
+	"unicode"
 )
 
 type SQLBuilder struct {
@@ -565,18 +567,24 @@ func (sb *SQLBuilder) reflectElementInfo(elem interface{}) ([]string,[][]interfa
 			m = m.Elem()
 		}
 
+		var e reflect.Value
 		for i := 0; i < v.Len(); i++ {
-			e := v.Index(i).Elem()
-			for i := 0; i < m.NumField(); i++ {
-				fn := m.Field(i).Name
-				tag := m.Field(i).Tag.Get("gdb")
-				if isContinue(fn, tag) {
+			vals := []interface{}{}
+			if v.Index(i).Kind() == reflect.Ptr {
+				e = v.Index(i).Elem()
+			}else{
+				e = v.Index(i)
+			}
+
+			for i2 := 0; i2 < e.NumField(); i2++ {
+				fn := m.Field(i2).Name
+				tag := m.Field(i2).Tag.Get("gdb")
+				if getTagIsContinue(fn, tag) {
 					continue
 				}
-				values = append(values, e.FieldByName(fn).Interface())
+				vals = append(vals, e.FieldByName(fn).Interface())
 			}
-			allValues = append(allValues, values)
-			values = values[0:0]
+			allValues = append(allValues, vals)
 		}
 		break
 	case reflect.Ptr:
@@ -597,7 +605,8 @@ func (sb *SQLBuilder) reflectElementInfo(elem interface{}) ([]string,[][]interfa
 	for i := 0; i < m.NumField(); i++ {
 		fn := m.Field(i).Name
 		tag := m.Field(i).Tag.Get("gdb")
-		if isContinue(fn, tag) {
+		fn = getFnForTag(fn, tag)
+		if getTagIsContinue(fn, tag) {
 			continue
 		}
 		fields = append(fields, fmt.Sprintf("%s", fn))
@@ -619,8 +628,16 @@ func getParams(v reflect.Value, m reflect.Type) []interface{} {
 	return values
 }
 
+//根据标签处理字段名
+func getFnForTag(fn, tag string) string {
+	fn = getTagColumnName(fn, tag)
+	fn = getTagUnderLine(fn, tag)
+
+	return fn
+}
+
 //是否跳过
-func isContinue(fn, tag string) bool {
+func getTagIsContinue(fn, tag string) bool {
 	if strings.Contains(tag, "ignore") {
 		return true
 	}
@@ -634,4 +651,39 @@ func isContinue(fn, tag string) bool {
 	}
 
 	return false
+}
+
+//获取标签中的字段名
+func getTagColumnName(fn, tag string) string {
+	tags := strings.Split(tag, ";")
+	for _, val := range tags {
+		if strings.Contains(val, "column") {
+			columnName := strings.Split(val, ":")[1]
+			return columnName
+		}
+	}
+
+	return fn
+}
+
+//字段名转下划线，在获取标签字段名之后处理
+func getTagUnderLine(fn, tag string) string  {
+	var buffer bytes.Buffer
+	if strings.Contains(tag, "underline") {
+		//Camel2Case
+		for i, i2 := range fn {
+			if unicode.IsUpper(i2){
+				if i != 0 {
+					buffer.WriteString("_")
+				}
+
+				buffer.WriteString(string(unicode.ToLower(i2)))
+			}else{
+				buffer.WriteString(string(i2))
+			}
+		}
+		return buffer.String()
+	}
+
+	return fn
 }
